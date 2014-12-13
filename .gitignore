@@ -1,0 +1,14 @@
+autom4te.cache
+config.h.in
+config.h
+config.log
+config.status
+configure
+Makefile
+*~
+*.o
+*.so
+*.so.*
+*.dll
+*.dylib
+*.log

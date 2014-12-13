@@ -1,0 +1,6 @@
+#!/bin/sh -e
+cd CAPSImg
+./configure "$@"
+
+cd ..
+cp Makefile.in Makefile
