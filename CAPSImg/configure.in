@@ -34,6 +34,13 @@ case $host in
 	LIB_LDFLAGS="${LDFLAGS} -shared -Wl,-soname,lib${PACKAGE}.so.${MAJOR_VERSION} -Wl,--version-script,lib${PACKAGE}.map -Wl,--out-implib,${LIBRARY=}.a"
 	EXTRA_LIBS="../${LIBRARY}"
 	;;
+    *-*-mingw64)
+	LIBRARY="capsimg.dll"
+	CFLAGS="${CFLAGS} -O2 -fomit-frame-pointer"
+	PICFLAGS=""
+	LIB_LDFLAGS="${LDFLAGS} -shared -Wl,-soname,lib${PACKAGE}.so.${MAJOR_VERSION} -Wl,--version-script,lib${PACKAGE}.map -Wl,--out-implib,${LIBRARY=}.a"
+	EXTRA_LIBS="../${LIBRARY}"
+	;;
     *-apple-darwin*)
 	LIBRARY="lib${PACKAGE}.dylib"
 	CFLAGS="${CFLAGS} -O2 -fomit-frame-pointer"
