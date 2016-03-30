@@ -19,6 +19,8 @@ endif
 
 clean:
 	make -C CAPSImg clean
+	rm -f capsimg.so capsimg.dll
 
 distclean:
 	make -C CAPSImg distclean
+	rm -f capsimg.so capsimg.dll
