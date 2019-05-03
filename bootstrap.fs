@@ -8,7 +8,5 @@ echo "Running autoconf"
 autoconf
 
 cd ..
-cp configure.in configure
-chmod a+x configure
 
-echo "Bootstrap done, you can now run ./configure"
+echo "Bootstrap done, you can now run ./configure.fs"

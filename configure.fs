@@ -6,4 +6,3 @@ else
 ./configure "$@"
 fi
 cd ..
-cp Makefile.in Makefile
