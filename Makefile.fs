@@ -1,3 +1,7 @@
+plugin = CAPSImg
+
+# Makefile.fs begin common ---------------------------------------------------
+
 version = $(shell cat VERSION.fs)
 uname := $(shell uname -a)
 ifneq ($(findstring Msys,$(uname)),)
@@ -5,20 +9,20 @@ os := Windows
 arch := x86-64
 exe := .exe
 dll := .dll
-opengl_libs := -lopengl32
+opengl_libs := -lopengl32 -lglew32
 else
 ifneq ($(findstring Darwin,$(uname)),)
 os := macOS
 arch := x86-64
 exe :=
 dll := .so
-opengl_libs := -framework OpenGL
+opengl_libs := -framework OpenGL -lGLEW
 else
 os := Linux
 arch := x86-64
 exe :=
 dll := .so
-opengl_libs := -lGL
+opengl_libs := -lGL -lGLEW
 endif
 endif
 
@@ -33,7 +37,7 @@ glib_libs = $(shell pkg-config --libs glib-2.0)
 
 cppflags = -DFSGS -DFSEMU -DFSE ${glib_cflags}
 libs = ${glib_libs} ${opengl_libs}
-libs += -lpng -lSDL2_ttf -lsamplerate -lGLEW
+libs += -lpng -lSDL2_ttf -lsamplerate
 
 fsemu-all: fsemu-build
 	@echo Built ${version} for ${os}_${arch}
@@ -57,9 +61,9 @@ rebuild: fsemu-rebuild
 fsemu-rebuild: fsemu-bootstrap fsemu-configure fsemu-clean fsemu-build
 
 fsemu-install: fsemu-build
-	rm -Rf ../OpenRetro/System/Plugins/${plugin}
-	mkdir -p ../OpenRetro/System/Plugins
-	mv dist.fs/${plugin} ../OpenRetro/System/Plugins/
+	rm -Rf ../OpenRetro/System/${plugin}
+	mkdir -p ../OpenRetro/System
+	mv dist.fs/${plugin} ../OpenRetro/System
 
 fsemu-assemble-pre:
 	rm -Rf ${plugin_dir}
@@ -70,9 +74,20 @@ fsemu-assemble-pre:
 
 fsemu-assemble-wrap: fsemu-assemble-pre fsemu-assemble
 
-fsemu-plugin-noclean: fsemu-build fsemu-assemble-wrap fsemu-strip fsemu-package
+fsemu-plugin-noclean: fsemu-plugin-prep fsemu-build fsemu-assemble-wrap \
+		fsemu-strip fsemu-package
+ifeq (${os}, Linux)
+	if [ -d ${os_arch_dir} ]; then cp ${os_arch_dir}/*.so* .; fi
+endif
 
-fsemu-plugin: fsemu-bootstrap fsemu-configure fsemu-clean fsemu-plugin-noclean
+fsemu-plugin-prep:
+	# Remove locally installed shared libraries (used for development)
+	# before building plugin, to avoid getting stale libraries included
+	# in the dist.
+	rm -f *.so*
+
+fsemu-plugin: fsemu-bootstrap fsemu-configure fsemu-clean \
+		fsemu-plugin-noclean
 
 # fsemu-plugin-clean:
 # 	rm -Rf dist.fs/${plugin}
@@ -82,12 +97,12 @@ fsemu-package:
 	@echo Packaged ${version} for ${os}-${arch}
 
 fsemu-strip:
-	# ./strip.fs dist.fs/${plugin}
 	./standalone.fs ${os_arch_dir}
+ifeq (${os}, macOS)
+	./wrap-macos.fs ${os_arch_dir} ${executable}
+endif
 
-# ----------------------------------------------------------------------------
-
-plugin = CAPSImg
+# Makefile.fs end common -----------------------------------------------------
 
 fsemu-bootstrap:
 	./bootstrap.fs
