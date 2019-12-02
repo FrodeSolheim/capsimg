@@ -1,4 +1,5 @@
 plugin = CAPSImg
+executable =
 
 # Makefile.fs begin common ---------------------------------------------------
 
@@ -60,10 +61,10 @@ rebuild: fsemu-rebuild
 
 fsemu-rebuild: fsemu-bootstrap fsemu-configure fsemu-clean fsemu-build
 
-fsemu-install: fsemu-build
-	rm -Rf ../OpenRetro/System/${plugin}
-	mkdir -p ../OpenRetro/System
-	mv dist.fs/${plugin} ../OpenRetro/System
+fsemu-install: fsemu-plugin-noclean
+	rm -Rf ../../OpenRetro/System/${plugin}
+	mkdir -p ../../OpenRetro/System
+	mv dist.fs/${plugin} ../../OpenRetro/System
 
 fsemu-assemble-pre:
 	rm -Rf ${plugin_dir}
@@ -76,7 +77,7 @@ fsemu-assemble-wrap: fsemu-assemble-pre fsemu-assemble
 
 fsemu-plugin-noclean: fsemu-plugin-prep fsemu-build fsemu-assemble-wrap \
 		fsemu-strip fsemu-package
-ifeq (${os}, Linux)
+ifeq (${os},Linux)
 	if [ -d ${os_arch_dir} ]; then cp ${os_arch_dir}/*.so* .; fi
 endif
 
@@ -98,8 +99,10 @@ fsemu-package:
 
 fsemu-strip:
 	./standalone.fs ${os_arch_dir}
-ifeq (${os}, macOS)
-	./wrap-macos.fs ${os_arch_dir} ${executable}
+ifeq (${os},macOS)
+ifneq (${executable},)
+	./wrap-macos.fs ${os_arch_dir} ${plugin} ${executable}
+endif
 endif
 
 # Makefile.fs end common -----------------------------------------------------
@@ -112,12 +115,15 @@ fsemu-configure:
 
 fsemu-build:
 	make -C CAPSImg
-ifeq ($(os), Windows)
+ifeq (${os},Windows)
 	cp CAPSImg/CAPSImg.dll capsimg.dll
-else ifeq ($(os), macOS)
+else
+ifeq (${os},macOS)
 	cp CAPSImg/libcapsimage.dylib capsimg.so
+	install_name_tool -id capsimg.so capsimg.so
 else
 	cp CAPSImg/libcapsimage.so.5.1 capsimg.so
+endif
 endif
 
 fsemu-clean:
@@ -138,7 +144,3 @@ fsemu-assemble:
 
 	mkdir -p ${licenses_dir}
 	cp LICENCE.txt ${licenses_dir}/CAPSImg.txt
-
-# Override the default strip target
-fsemu-strip:
-	./strip.fs dist.fs/${plugin}
