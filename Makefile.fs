@@ -111,7 +111,11 @@ fsemu-bootstrap:
 	./bootstrap.fs
 
 fsemu-configure:
+ifeq (${os},Windows)
+	./configure.fs --enable-static
+else
 	./configure.fs
+endif
 
 fsemu-build:
 	make -C CAPSImg
