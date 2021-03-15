@@ -15,7 +15,7 @@ else
 if [ "$EXECUTABLE" = "" ]; then
 EXECUTABLE=$PACKAGE_NAME
 fi
-if [ $PACKAGE_TYPE = "fsemu-plugin/dll" ]; then
+if [ $PACKAGE_TYPE = "fs-library-plugin" ]; then
 sh fsbuild/frameworkify.sh $PLUGIN_BINDIR $PACKAGE_NAME_PRETTY \
 $EXECUTABLE $PACKAGE_MACOS_BUNDLE_ID
 else
