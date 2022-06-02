@@ -5,17 +5,8 @@ import hashlib
 import os
 import sys
 
-url = sys.argv[1]
-checksum = sys.argv[2]
 
-if checksum.startswith("sha256:"):
-    h = hashlib.sha256
-    checksum = checksum[7:]
-else:
-    raise Exception("Unknown hash function")
-
-
-def verify():
+def verify(archive: str, h, checksum):
     with open(archive, "rb") as f:
         actual_checksum = h(f.read()).hexdigest()
     result = actual_checksum == checksum
@@ -25,25 +16,38 @@ def verify():
         print("Checksum verification failed")
         print("Expected", checksum)
         print("But got:", actual_checksum)
-
     return result
 
 
-archive = url.split("/")[-1]
-if not os.path.exists("fsbuild/_sources"):
-    os.makedirs("fsbuild/_sources")
-archive = os.path.join("fsbuild/_sources", archive)
+def main():
+    url = sys.argv[1]
+    checksum = sys.argv[2]
 
-if os.path.exists(archive):
-    if verify():
-        sys.exit(0)
-    print("Removing archive", archive)
-    os.remove(archive)
+    if checksum.startswith("sha256:"):
+        h = hashlib.sha256
+        checksum = checksum[7:]
+    else:
+        raise Exception("Unknown hash function")
 
-# FIXME: Replace use of wget, just use python instead
-if os.system(f'cd fsbuild/_sources && wget "{url}"') != 0:
-    print("Failed to download")
-    sys.exit(1)
+    archive = url.split("/")[-1]
+    if not os.path.exists("fsbuild/_sources"):
+        os.makedirs("fsbuild/_sources")
+    archive = os.path.join("fsbuild/_sources", archive)
 
-if not verify():
-    sys.exit(2)
+    if os.path.exists(archive):
+        if verify(archive, h, checksum):
+            sys.exit(0)
+        print("Removing archive", archive)
+        os.remove(archive)
+
+    # FIXME: Replace use of wget, just use python instead
+    if os.system(f'cd fsbuild/_sources && wget "{url}"') != 0:
+        print("Failed to download")
+        sys.exit(1)
+
+    if not verify(archive, h, checksum):
+        sys.exit(2)
+
+
+if __name__ == "__main__":
+    main()
